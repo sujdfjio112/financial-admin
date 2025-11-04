@@ -1,15 +1,15 @@
 // scripts/copy-index-to-404.js
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const distDir = path.resolve(__dirname, '../dist');
-const indexFile = path.join(distDir, 'index.html');
-const notFoundFile = path.join(distDir, '404.html');
 
-if (!fs.existsSync(indexFile)) {
-  console.error('build output not found! run build first.');
-  process.exit(1);
-}
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-fs.copyFileSync(indexFile, notFoundFile);
-console.log('Copied index.html -> 404.html');
+fs.copyFileSync(
+  path.join(__dirname, "../dist/index.html"),
+  path.join(__dirname, "../dist/404.html")
+);
+
+console.log("✅ 404.html 已从 index.html 复制完成");
