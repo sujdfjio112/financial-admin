@@ -8,6 +8,6 @@ export default defineConfig({
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   build: {
     outDir: 'dist', // 确保不是 'src'
-    sourcemap: false, // 关闭生产 sourcemap（如果你不需要）
+    sourcemap: true, // 关闭生产 sourcemap（如果你不需要）
   },
 });
