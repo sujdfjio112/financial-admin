@@ -6,13 +6,18 @@
     "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
+    "inlineSourceMap": false,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": ".",
+    "declaration": false,
+    "outDir": "./dist", // 不要是 src
+    "noEmit": true, // 若你只用 Vite 打包，防止 tsc 输出 js
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "types": ["vite/client"]
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
