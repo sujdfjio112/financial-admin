@@ -2,7 +2,7 @@
   <header class="app-header">
     <div class="left">
       <button @click="$emit('toggleSidebar')">☰</button>
-      <span class="logo">管理后台</span>
+      <span class="logo">管理后台-</span>
     </div>
     <div class="right">
       <span>{{ user.name }}</span>
