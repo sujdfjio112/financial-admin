@@ -1,4 +1,3 @@
-// scripts/copy-index-to-404.js
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -14,24 +13,31 @@ function normalizeBase(b) {
   return b.replace(/^\/+|\/+$/g, "");
 }
 
-// recursive search (prefer root index.html)
-function findIndexHtml(dir) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-  // 1) check current dir
-  for (const e of entries) {
-    if (e.isFile() && e.name.toLowerCase() === "index.html") {
-      return path.join(dir, e.name);
+// 添加重定向逻辑到 HTML
+function addRedirectLogic(htmlContent, basePath = '') {
+  const redirectScript = `
+<!-- SPA Redirect Script for GitHub Pages -->
+<script>
+  // 保存原始路径并重定向到首页
+  (function(){
+    var redirect = sessionStorage.redirect;
+    delete sessionStorage.redirect;
+    
+    if (redirect && redirect !== location.pathname) {
+      history.replaceState(null, null, redirect);
     }
-  }
+    
+    // 如果是 404 页面，设置重定向
+    if (location.pathname !== '${basePath}/' && location.pathname !== '${basePath}/index.html') {
+      sessionStorage.redirect = location.pathname;
+      window.location.replace('${basePath}/');
+    }
+  })();
+</script>
+`;
 
-  // 2) search subdirs in stable alphabetical order
-  const dirs = entries.filter((e) => e.isDirectory()).map((d) => d.name).sort();
-  for (const d of dirs) {
-    const found = findIndexHtml(path.join(dir, d));
-    if (found) return found;
-  }
-  return null;
+  // 在 head 标签结束前插入脚本
+  return htmlContent.replace('</head>', redirectScript + '</head>');
 }
 
 try {
@@ -40,42 +46,26 @@ try {
     process.exit(1);
   }
 
-  // 优先：如果 CLI 传 base 参数则优先按该子目录查找
-  const cliBase = normalizeBase(process.argv[2]); // e.g. '/financial-admin/' 或 'financial-admin'
-  let indexPath = null;
+  const cliBase = normalizeBase(process.argv[2]);
+  let indexPath = path.join(distRoot, "index.html");
 
-  if (cliBase) {
-    const candidate = path.join(distRoot, cliBase, "index.html");
-    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-      indexPath = candidate;
-    } else {
-      console.warn(`⚠️ 通过 CLI 指定的 base 未找到 index.html: ${candidate}`);
-    }
-  }
-
-  // 第二优先：直接 dist/index.html
-  if (!indexPath) {
-    const rootIndex = path.join(distRoot, "index.html");
-    if (fs.existsSync(rootIndex) && fs.statSync(rootIndex).isFile()) {
-      indexPath = rootIndex;
-    }
-  }
-
-  // 第三优先：递归查找 dist 下第一个 index.html
-  if (!indexPath) {
-    indexPath = findIndexHtml(distRoot);
-  }
-
-  if (!indexPath) {
-    console.error(`❌ 在 ${distRoot} 下未找到 index.html。请检查你的 Vite build 输出（或传入 base 参数）。`);
+  if (!fs.existsSync(indexPath)) {
+    console.error(`❌ 未找到 index.html: ${indexPath}`);
     process.exit(2);
   }
 
-  const indexDir = path.dirname(indexPath);
-  const dest404 = path.join(indexDir, "404.html");
-
-  fs.copyFileSync(indexPath, dest404);
-  console.log(`✅ 已复制:\n  ${indexPath}\n→ ${dest404}`);
+  // 读取 index.html 内容
+  const indexHtmlContent = fs.readFileSync(indexPath, 'utf8');
+  
+  // 添加重定向逻辑
+  const basePath = cliBase ? `/${cliBase}` : '';
+  const htmlWithRedirect = addRedirectLogic(indexHtmlContent, basePath);
+  
+  // 写入 404.html
+  const dest404 = path.join(distRoot, "404.html");
+  fs.writeFileSync(dest404, htmlWithRedirect);
+  
+  console.log(`✅ 已复制并添加重定向逻辑:\n  ${indexPath}\n→ ${dest404}`);
   process.exit(0);
 } catch (err) {
   console.error("❌ 复制失败：", err);
