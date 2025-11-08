@@ -1,3 +1,76 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body, html, #app { height: 100%; font-family: "Helvetica Neue", Arial, sans-serif; }
-a { color: inherit; text-decoration: none; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* 定义字体变量 */
+  --font-family: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+
+  /* 字体大小系统 */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.875rem; /* 30px */
+  --text-4xl: 2.25rem; /* 36px */
+
+  /* 行高 */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* 颜色 */
+  --color-primary: #1a202c;
+  --color-secondary: #4a5568;
+  --color-accent: #2d3748;
+}
+
+body,
+html,
+#app {
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-primary);
+  min-height: 100vh;
+
+  /* 字体渲染优化 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.h-6 {
+  height: 20px;
+}
+
+.w-6 {
+  height: 20px;
+}
+
+.h-4 {
+  height: 18px;
+}
+
+.w-4 {
+  height: 18px;
+}
+
+
+.flex {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.flex-center {
+  align-items: center;
+}
