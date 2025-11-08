@@ -57,9 +57,10 @@ import {
   CloudIcon,
   ShieldCheckIcon,
 } from '@heroicons/vue/24/outline';
+import { MenuItem } from '@/types/menu';
 
 // 原始数据（你可以直接替换、扩展）
-const sidebarList = reactive([
+const sidebarList = reactive<MenuItem[]>([
   {
     id: 1,
     title: 'Overview',
@@ -105,7 +106,7 @@ const sidebarList = reactive([
 ]);
 
 // 帮助分区（固定项）
-const helpList = reactive([
+const helpList = reactive<MenuItem[]>([
   { id: 100, title: 'Messages', path: '/messages', icon: InboxIcon, badge: '3' },
   { id: 101, title: 'Library', path: '/library', icon: DocumentTextIcon },
   { id: 102, title: 'Settings', path: '/settings', icon: CogIcon },

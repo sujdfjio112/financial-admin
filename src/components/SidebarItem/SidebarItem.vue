@@ -42,17 +42,7 @@ import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ChevronRightIcon } from '@heroicons/vue/24/outline';
 import SidebarItem from './SidebarItem.vue';
-
-interface MenuItem {
-  id: number;
-  title: string;
-  path?: string;
-  icon?: any;
-  children?: MenuItem[];
-  badge?: string;
-  dot?: boolean;
-  active?: boolean;
-}
+import { MenuItem } from '@/types/menu';
 
 const props = defineProps<{ item: MenuItem; level: number }>();
 const route = useRoute();

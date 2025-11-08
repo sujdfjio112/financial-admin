@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router';
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: '/dashboard',
   },
   {
     path: '/',
@@ -11,18 +12,18 @@ const routes = [
     children: [
       { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue') },
       // 在这里继续添加管理页面路由
-    ]
+    ],
   },
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/Login.vue')
-  }
+    component: () => import('@/views/Login.vue'),
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes
+  routes,
 });
 
 export default router;
