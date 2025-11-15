@@ -38,7 +38,6 @@ jobs:
       - name: 'Restore cache: node_modules + vite'
         uses: actions/cache@v4
         with:
-          # 使用 package-lock.json 做 key，vite.config 文件改动也会刷新缓存
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json','**/vite.config.*') }}-v1
           restore-keys: |
             ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-
@@ -49,17 +48,14 @@ jobs:
             .vite
             node_modules/.vite
 
-      - name: Install dependencies (fast)
-        # prefer-offline 先用本地缓存、no-audit/no-fund 跳过额外开销、silent 减少日志量
+      - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund --silent
-
-      - name: Prebuild deps cache (optional, speeds up Vite prebundle)
-        # 该步会触发 Vite 的依赖预构建（esbuild），使得后续构建更快并把缓存写入 .vite
-        # 如不想额外步骤可删除此 step，通常能减少总耗时（取决项目）
-        run: npx vite --version >/dev/null && npx vite build --ssr manifest --emptyOutDir=false || echo "skip prebuild"
 
       - name: Build
         run: npm run build --if-present --silent
+
+      - name: Copy index -> 404 (for SPA)
+        run: node scripts/copy-index-to-404.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
