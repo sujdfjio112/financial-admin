@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import path from 'path';
 
 export default defineConfig({
-  base: './financial-admin/', // GitHub Pages 或自定义路径
+  base: '/financial-admin/', // GitHub Pages 或自定义路径
   plugins: [vue()],
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   build: {
