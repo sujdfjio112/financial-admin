@@ -71,11 +71,23 @@ jobs:
         with:
           path: ./dist
 
-  deploy:
+  report-build-status:
     needs: build
     runs-on: ubuntu-latest
+    steps:
+      - name: Report build status
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log("Build successful. Pages artifact ready for deploy.")
+
+  deploy:
+    needs: [build, report-build-status]
+    runs-on: ubuntu-latest
     environment:
-      name: github-pages # ✅ 绑定环境，显示流程图
+      name: github-pages
+      url: ${{ steps.deploy-pages.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4 # ✅ 官方部署 Action
+        id: deploy-pages
+        uses: actions/deploy-pages@v4
