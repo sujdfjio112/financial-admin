@@ -3,11 +3,23 @@ import vue from '@vitejs/plugin-vue';
 import path from 'path';
 
 export default defineConfig({
-  base: '/financial-admin/', // <- 如果你的 repo 是 sujdfjio112/financial-admin
+  base: './financial-admin/', // GitHub Pages 或自定义路径
   plugins: [vue()],
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   build: {
-    outDir: 'dist', // 确保不是 'src'
-    sourcemap: true, // 关闭生产 sourcemap（如果你不需要）
+    outDir: 'dist',
+    sourcemap: false,
+    target: 'es2015',
+    minify: 'esbuild',
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) return 'vendor';
+        },
+      },
+    },
   },
+  server: { hmr: true },
+  optimizeDeps: { include: ['vue', 'vue-router', 'pinia'] },
 });
