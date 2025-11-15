@@ -4,7 +4,7 @@ import path from 'path';
 import critical from 'rollup-plugin-critical';
 
 export default defineConfig({
-  base: '/financial-admin/', // 保持你原来的路径
+  base: './financial-admin/', // 保持你原来的路径
   plugins: [
     vue(),
     critical({
