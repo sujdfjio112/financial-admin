@@ -23,6 +23,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      artifact-path: ./dist
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,8 +53,15 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund --silent
 
-      - name: Build
+      - name: Build project
         run: npm run build --if-present --silent
+
+      - name: Verify build
+        run: |
+          if [ ! -f ./dist/index.html ]; then
+            echo "Build failed: index.html not found in ./dist"
+            exit 1
+          fi
 
       - name: Copy index -> 404 (for SPA)
         run: node scripts/copy-index-to-404.js
