@@ -82,7 +82,8 @@ jobs:
             console.log("Build successful. Pages artifact ready for deploy.")
 
   deploy:
-    needs: [build, report-build-status]
+    # needs: [build, report-build-status]
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
