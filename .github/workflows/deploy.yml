@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22' # 或你项目需要的版本
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
