@@ -1,14 +1,23 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages (Vite + pnpm)
 
 on:
   push:
     branches:
       - develop
 
+concurrency:
+  group: deploy-pages-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
+env:
+  CI: 'true'
+  # 若需要 sourcemap，删除或设为 'true'
+  VITE_SOURCEMAP: 'false'
 
 jobs:
   build:
@@ -16,21 +25,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # 或你项目需要的版本
-          cache: 'npm'
+          node-version: '22'
+          cache: 'pnpm' # setup-node 对 pnpm 的内置支持（如果不可用也会回退到 actions/cache）
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Enable corepack & prepare pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm -v
 
-      - name: Build
-        run: npm run build
+      - name: Restore caches (pnpm store + deps + vite)
+        uses: actions/cache@v4
+        with:
+          # key 包含 pnpm-lock.yaml 和 vite.config.* 的哈希，vite config 改动会刷新缓存
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml','**/vite.config.*') }}-v1
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-pnpm-
+          path: |
+            ~/.pnpm-store
+            node_modules
+            .vite
+            node_modules/.vite
+
+      - name: Install dependencies (pnpm, frozen lockfile)
+        run: pnpm install --frozen-lockfile --offline || pnpm install --frozen-lockfile
+        # 说明：优先尝试离线安装（利用 cache），失败时回退到联网安装以保证成功
+
+      - name: Build (Vite production)
+        run: pnpm run build --silent
 
       - name: Upload Pages artifact
-        # use v3 which depends on artifact v4 internally
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
@@ -39,7 +70,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment:
-      name: github-pages # <- 必须添加
+      name: github-pages
     steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
