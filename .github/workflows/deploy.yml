@@ -5,7 +5,7 @@ on:
     branches:
       - develop
   schedule:
-    - cron: '14 20 * * *' # 每天 0 点中国时间
+    - cron: '18 20 * * *' # 每天 0 点中国时间
 
 # 取消重复运行，避免并发推送导致排队等待
 concurrency:
