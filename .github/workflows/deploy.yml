@@ -16,7 +16,6 @@ permissions:
 
 env:
   CI: 'true'
-  # 若需要 sourcemap，删除或设为 'true'
   VITE_SOURCEMAP: 'false'
 
 jobs:
@@ -28,22 +27,27 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm' # setup-node 对 pnpm 的内置支持（如果不可用也会回退到 actions/cache）
-
-      - name: Enable corepack & prepare pnpm
+      # -------------------------
+      # 🔥 必须：先启用 corepack 才能让 pnpm 可执行
+      # -------------------------
+      - name: Enable pnpm (corepack)
         run: |
           corepack enable
           corepack prepare pnpm@latest --activate
           pnpm -v
 
-      - name: Restore caches (pnpm store + deps + vite)
+      # -------------------------
+      # setup-node 现在就不会报 pnpm not found
+      # -------------------------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Restore caches
         uses: actions/cache@v4
         with:
-          # key 包含 pnpm-lock.yaml 和 vite.config.* 的哈希，vite config 改动会刷新缓存
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml','**/vite.config.*') }}-v1
           restore-keys: |
             ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-
@@ -54,11 +58,10 @@ jobs:
             .vite
             node_modules/.vite
 
-      - name: Install dependencies (pnpm, frozen lockfile)
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile --offline || pnpm install --frozen-lockfile
-        # 说明：优先尝试离线安装（利用 cache），失败时回退到联网安装以保证成功
 
-      - name: Build (Vite production)
+      - name: Build (Vite)
         run: pnpm run build --silent
 
       - name: Upload Pages artifact
