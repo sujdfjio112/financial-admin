@@ -1,11 +1,11 @@
 name: Deploy to GitHub Pages
 
 on:
-  # push:
-  #   branches:
-  #     - develop
-  schedule:
-    - cron: "*/5 * * * *" # 每 5 分钟触发一次（测试用）
+  push:
+    branches:
+      - develop
+  # schedule:
+  #   - cron: "*/5 * * * *" # 每 5 分钟触发一次（测试用）
 
 # 取消重复运行，避免并发推送导致排队等待
 concurrency:
