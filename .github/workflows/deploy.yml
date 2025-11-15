@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - develop
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *' # UTC 02:00 可选定时触发
 
 # 取消重复运行，避免并发推送导致排队等待
 concurrency:
@@ -53,6 +58,14 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund --silent
 
+      - name: Get package version
+        id: get-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
+
       - name: Build project
         run: npm run build --if-present --silent
 
@@ -85,10 +98,50 @@ jobs:
     # needs: [build, report-build-status]
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy-pages.outputs.page_url }}
+    environment: ${{ github.event_name == 'push' && 'github-pages' || 'github-pages-auto' }}
     steps:
+      - name: Wait for scheduled release (if versioned)
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name != 'push'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const version = process.env.VERSION || 'dev';
+            const scheduleFile = './release-schedule.json';
+            if (!fs.existsSync(scheduleFile)) {
+              console.log('No release schedule, deploy immediately');
+              return;
+            }
+            const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf-8'));
+            if (!(version in schedule)) {
+              console.log('Version not in schedule, deploy immediately');
+              return;
+            }
+            const releaseTime = new Date(schedule[version]);
+            const now = new Date();
+            const diff = releaseTime - now;
+            if (diff > 0) {
+              console.log(`Waiting ${diff}ms until scheduled release for version ${version}`);
+              await new Promise(resolve => setTimeout(resolve, diff));
+            }
+
       - name: Deploy to GitHub Pages
         id: deploy-pages
         uses: actions/deploy-pages@v4
+
+      - name: Print deployment info to workflow summary
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const version = process.env.VERSION || 'dev';
+            const pageUrl = '${{ steps.deploy-pages.outputs.page_url }}';
+
+            // 打印到 logs
+            console.log("## Deployment Info\n- Version: " + version + "\n- Pages URL: " + pageUrl);
+
+            // 输出到 workflow summary
+            const fs = require('fs');
+            fs.appendFileSync(
+              process.env.GITHUB_STEP_SUMMARY,
+              "## Deployment Info\n- Version: " + version + "\n- Pages URL: " + pageUrl + "\n"
+            );
