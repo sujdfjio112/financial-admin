@@ -184,7 +184,7 @@ const props = defineProps<{
   data?: Record<string, Candle[]>; // keyed by coin id
 }>();
 
-const width = props.width ?? 960;
+const width = props.width ?? 880;
 const height = props.height ?? 470;
 
 // demo coins (colors can be customized)

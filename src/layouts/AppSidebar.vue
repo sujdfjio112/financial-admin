@@ -63,8 +63,8 @@ import { MenuItem } from '@/types/menu';
 const sidebarList = reactive<MenuItem[]>([
   {
     id: 1,
-    title: 'Overview',
-    path: '/dashboard/overview',
+    title: 'dashboard',
+    path: '/dashboard',
     icon: ChartBarIcon,
     active: true,
   },

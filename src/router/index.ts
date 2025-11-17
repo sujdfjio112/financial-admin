@@ -12,6 +12,11 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: 'dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue') },
       // 在这里继续添加管理页面路由
+      {
+        path: '/leaderboard',
+        name: 'leaderboard',
+        component: () => import('@/views/leaderboard.vue'),
+      },
     ],
   },
   {
