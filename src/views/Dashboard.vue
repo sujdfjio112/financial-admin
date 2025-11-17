@@ -135,6 +135,11 @@
         </div>
       </article>
     </div>
+
+    <div class="grid" style="margin-top: 20px; grid-template-columns: repeat(2, 1fr)">
+      <MarketChart />
+      <TrendingList />
+    </div>
   </div>
 </template>
 
@@ -147,6 +152,8 @@ import {
   ShoppingBagIcon,
 } from '@heroicons/vue/24/solid';
 
+import MarketChart from '@/components/MarketChart/MarketChart.vue';
+import TrendingList from '@/components/TrendingList/TrendingList.vue';
 // ---- data ----
 const metrics = [
   {
@@ -253,8 +260,8 @@ function smoothPath(points, w = 140, h = 60, tension = 0.2) {
 /* Base */
 .wrap {
   padding: 28px;
-  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
-  min-height: 100vh;
+  background: linear-gradient(180deg, #f7fbff 0%, #f9f0f0 100%);
+  box-sizing: border-box;
   font-family:
     Inter,
     ui-sans-serif,
