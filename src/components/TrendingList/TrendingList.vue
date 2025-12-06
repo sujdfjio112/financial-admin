@@ -16,7 +16,7 @@
 
           <!-- center: sparkline -->
           <div class="cell spark">
-            <svg :width="sparkW" :height="sparkH" viewBox="0 0 100 30" preserveAspectRatio="none">
+            <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
               <defs>
                 <linearGradient :id="`g-${item.symbol}`" x1="0" x2="0" y1="0" y2="1">
                   <stop offset="0%" stop-color="rgba(0,0,0,0)" />
@@ -170,7 +170,7 @@ const itemsToRender = computed<Row[]>(() => {
 });
 
 // --- layout consts ---
-const sparkW = 120; // px in template svg units - viewBox uses 100 width but width attribute used in template (kept simple)
+// let sparkline SVG scale responsively via CSS
 const sparkH = 36;
 
 // --- helpers: format ---
@@ -309,6 +309,7 @@ function pickColor(s: string) {
 .card-inner {
   margin: 0 auto;
   background: #ffffff;
+  padding: 14px 16px;
 }
 
 /* title */
@@ -323,20 +324,22 @@ function pickColor(s: string) {
 .list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 6px 4px 2px 4px;
-}
-.row {
-  display: grid;
-  grid-template-columns: 130px 1fr 92px 120px 104px;
-  align-items: center;
-  gap: 8px;
+  gap: 12px;
   padding: 8px 6px;
-  border-radius: 8px;
+}
+  .row {
+  display: grid;
+  /* use minmax(0, ...) so columns can shrink on small screens and avoid overflow */
+  grid-template-columns: minmax(0, 130px) 1fr minmax(0, 100px) minmax(0, 110px) minmax(0, 120px);
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  background: transparent;
 }
 
 .row:hover {
-  background: rgba(36, 197, 131, 0.02);
+  background: rgba(36, 197, 131, 0.03);
 }
 
 /* left cell */
@@ -346,10 +349,10 @@ function pickColor(s: string) {
   gap: 12px;
 }
 .icon {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 10px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -368,16 +371,36 @@ function pickColor(s: string) {
   margin-top: 2px;
 }
 
+/* center the left meta block vertically relative to the icon */
+.cell.left .meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 /* sparkline */
 .cell.spark {
   padding-left: 6px;
   padding-right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell.spark .sparkline {
+  width: 100%;
+  height: 36px;
+  display: block;
 }
 
 /* stat columns */
 .cell.stat-col {
-  text-align: left;
-  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  text-align: center;
 }
 .label {
   font-size: 12px;
@@ -387,7 +410,6 @@ function pickColor(s: string) {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 6px;
 }
 .pct {
   font-weight: 700;
@@ -409,26 +431,30 @@ function pickColor(s: string) {
 
 /* current column */
 .cell.current-col {
-  text-align: right;
-  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
 }
 .cell.current-col .label {
-  text-align: right;
+  text-align: center;
 }
 .price {
   font-weight: 800;
   color: #0f172a;
   font-size: 18px;
-  margin-top: 6px;
+  margin-top: 0;
 }
 
 /* responsive adjustments */
 @media (max-width: 900px) {
   .row {
-    grid-template-columns: 180px 1fr 100px 100px 120px;
+    grid-template-columns: minmax(0, 160px) 1fr minmax(0, 90px) minmax(0, 90px) minmax(0, 100px);
   }
   .card-inner {
-    padding: 16px;
+    padding: 12px;
   }
 }
 
@@ -451,6 +477,24 @@ function pickColor(s: string) {
   }
   .price {
     font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* on very small screens hide sparkline and less important stat column to save space */
+  .cell.spark {
+    display: none;
+  }
+  /* hide the 'alltime' column (second stat-col) to keep layout compact */
+  .row .cell.stat-col:nth-of-type(2) {
+    display: none;
+  }
+  .row {
+    grid-template-columns: 1fr auto; /* name + price */
+    align-items: center;
+  }
+  .meta .name {
+    font-size: 15px;
   }
 }
 </style>

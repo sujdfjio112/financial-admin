@@ -1,5 +1,10 @@
 <template>
   <header class="header">
+    <!-- 移动端侧边栏切换 -->
+    <button class="mobile-toggle" @click="$emit('toggle-sidebar')" aria-label="Toggle sidebar">
+      <Bars3Icon class="icon mobile-toggle-icon" />
+    </button>
+
     <!-- 搜索框 -->
     <div class="search-box">
       <MagnifyingGlassIcon class="icon search-icon" />
@@ -38,7 +43,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { BellIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
+import { BellIcon, ChevronDownIcon, MagnifyingGlassIcon, Bars3Icon } from '@heroicons/vue/24/outline';
+
+const emit = defineEmits(['toggle-sidebar']);
 
 const search = ref('');
 const isOpen = ref(false);
@@ -48,7 +55,7 @@ function toggleDropdown() {
 }
 
 function onClickNotification() {
-  console.log('clicked notification');
+  // production: replace with logger if needed
 }
 </script>
 
@@ -60,6 +67,20 @@ function onClickNotification() {
   background: #fff;
   padding: 10px 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* 移动端汉堡 */
+.mobile-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  margin-right: 8px;
+}
+.mobile-toggle-icon {
+  width: 22px;
+  height: 22px;
+  color: #333;
 }
 
 /* 搜索框 */
@@ -201,5 +222,22 @@ function onClickNotification() {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+@media (max-width: 900px) {
+  .mobile-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-box {
+    width: 140px;
+    margin-left: 8px;
+  }
+
+  .actions {
+    gap: 12px;
+  }
 }
 </style>

@@ -136,7 +136,7 @@
       </article>
     </div>
 
-    <div class="grid" style="margin-top: 20px; grid-template-columns: repeat(2, 1fr)">
+    <div class="grid panels" style="margin-top: 20px;">
       <MarketChart />
       <TrendingList />
     </div>
@@ -302,6 +302,22 @@ function smoothPath(points, w = 140, h = 60, tension = 0.2) {
   .grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* panels: dashboard main area where charts / lists live */
+.grid.panels {
+  grid-template-columns: 2fr 1fr; /* chart takes more space */
+  gap: 18px;
+}
+@media (max-width: 900px) {
+  .grid.panels {
+    grid-template-columns: 1fr; /* stack on smaller screens */
+  }
+}
+
+/* allow grid items to shrink below their content's min size (prevents horizontal scrollbar) */
+.grid.panels > * {
+  min-width: 0;
 }
 
 /* Card */

@@ -78,3 +78,49 @@ a {
 ul li {
   list-style: none;
 }
+
+/* Responsive utilities and layout tokens */
+:root {
+  --sidebar-width: 260px;
+  --sidebar-width-sm: 220px;
+  --header-height: 60px;
+}
+
+/* Containers */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Overlay used for mobile sidebar */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 30;
+}
+
+/* Breakpoints */
+@media (max-width: 900px) {
+  :root {
+    --sidebar-width: var(--sidebar-width-sm);
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+
+  /* make input and other elements more flexible */
+  .flex {
+    gap: 8px;
+    padding: 8px 0;
+  }
+}
+
+/* Small devices */
+@media (max-width: 480px) {
+  :root {
+    --text-base: 0.9375rem; /* slightly smaller */
+  }
+}

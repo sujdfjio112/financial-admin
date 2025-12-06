@@ -119,7 +119,7 @@ const mainList = computed(() => sidebarList);
 
 <style scoped>
 .app-sidebar {
-  width: 260px;
+  width: var(--sidebar-width, 260px);
   height: 100vh;
   display: flex;
   flex-direction: column;

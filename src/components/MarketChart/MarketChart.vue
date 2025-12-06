@@ -1,5 +1,5 @@
 <template>
-  <div class="market-card" :style="{ width: width + 'px' }" ref="container">
+  <div class="market-card" :style="propWidth ? { width: propWidth + 'px' } : { width: '100%' }" ref="container">
     <div class="header">
       <div class="title">Market Chart</div>
       <div class="legend">
@@ -184,8 +184,14 @@ const props = defineProps<{
   data?: Record<string, Candle[]>; // keyed by coin id
 }>();
 
-const width = props.width ?? 880;
-const height = props.height ?? 470;
+// responsive: if user passes `width`/`height` use them, otherwise measure container
+const propWidth = props.width;
+const propHeight = props.height;
+
+import { onUnmounted } from 'vue';
+
+const svgWidth = ref(propWidth ?? 0);
+const svgHeight = ref((propHeight ?? 470) - 120);
 
 // demo coins (colors can be customized)
 const coins = [
@@ -240,16 +246,17 @@ function selectCoin(id: string) {
   active.value = id;
 }
 
-const svgWidth = width;
-const svgHeight = height - 120; // keep space for info row below
-
-// plot margins
-const plot = {
-  left: 48,
-  right: svgWidth - 140, // leave space for y labels and tooltip
-  top: 28,
-  bottom: svgHeight - 36,
-};
+// plot margins are computed from current svg dimensions and adapt to narrow screens
+const plot = computed(() => {
+  const w = svgWidth.value || 0;
+  // smaller margins on small widths so the plot area is fuller
+  const left = w < 480 ? 28 : 48;
+  // right: ensure some room for labels/tooltip but shrink on narrow screens
+  const right = Math.max(left + 100, w - (w < 480 ? 60 : 140));
+  const top = w < 360 ? 20 : 28;
+  const bottom = (svgHeight.value || 0) - (w < 360 ? 30 : 36);
+  return { left, right, top, bottom };
+});
 
 // styling colors
 const upColor = '#2ecc71';
@@ -264,12 +271,18 @@ const dataset = computed(() => dataMap[active.value] ?? defaultData[active.value
 const visibleData = computed(() => dataset.value);
 
 // x scale helpers
-const candleWidth = 10;
-const candleHalfWidth = candleWidth / 2;
+const candleWidth = computed(() => {
+  const n = visibleData.value.length || 1;
+  const available = Math.max(1, (plot.value.right - plot.value.left));
+  // proportional base, clamped to sensible min/max to keep visuals consistent
+  const base = Math.floor((available / Math.max(1, n)) * 0.6);
+  return Math.max(3, Math.min(24, base));
+});
+const candleHalfWidth = computed(() => candleWidth.value / 2);
 function xForIndex(i: number) {
   const n = visibleData.value.length;
-  const w = (plot.right - plot.left) / Math.max(1, n - 1);
-  return plot.left + i * w;
+  const w = (plot.value.right - plot.value.left) / Math.max(1, n - 1);
+  return plot.value.left + i * w;
 }
 
 // y scale helpers
@@ -283,7 +296,9 @@ const prices = computed(() => {
 });
 function yForPrice(p: number) {
   const range = prices.value.max - prices.value.min;
-  const y = plot.top + ((prices.value.max - p) / range) * (plot.bottom - plot.top);
+  const top = plot.value.top;
+  const bottom = plot.value.bottom;
+  const y = top + ((prices.value.max - p) / range) * (bottom - top);
   return y;
 }
 
@@ -292,7 +307,7 @@ const gridY = computed(() => {
   const lines = 5;
   const arr: number[] = [];
   for (let i = 0; i <= lines; i++) {
-    const t = plot.top + ((plot.bottom - plot.top) * i) / lines;
+    const t = plot.value.top + ((plot.value.bottom - plot.value.top) * i) / lines;
     arr.push(t);
   }
   return arr;
@@ -315,7 +330,6 @@ const xTicks = computed(() => {
   for (let i = 0; i < n; i += step) {
     ticks.push({ index: i, label: visibleData.value[i].time });
   }
-  // last tick if not present
   if (ticks.length === 0 && n > 0) ticks.push({ index: 0, label: visibleData.value[0].time });
   return ticks;
 });
@@ -327,8 +341,8 @@ function onMouseMove(e: MouseEvent) {
   const rect = (e.currentTarget as SVGElement).getBoundingClientRect();
   const x = e.clientX - rect.left;
   const n = visibleData.value.length;
-  const w = (plot.right - plot.left) / Math.max(1, n - 1);
-  let idx = Math.round((x - plot.left) / w);
+  const w = (plot.value.right - plot.value.left) / Math.max(1, n - 1);
+  let idx = Math.round((x - plot.value.left) / w);
   idx = Math.max(0, Math.min(n - 1, idx));
   hover.x = x;
   hover.y = e.clientY - rect.top;
@@ -389,9 +403,29 @@ watch(
 
 // expose to template (for TS)
 const container = ref<HTMLElement | null>(null);
-
+let ro: ResizeObserver | null = null;
 onMounted(() => {
-  // noop
+  // if props provide explicit width/height, use them; otherwise measure the container
+    if (propWidth) {
+    svgWidth.value = propWidth;
+    svgHeight.value = (propHeight ?? 470) - 120;
+  } else if (container.value) {
+    const measure = () => {
+      const el = container.value as HTMLElement;
+      const w = el.clientWidth - 36; // padding compensation
+      // allow the chart to shrink further to prevent overflow in tight layouts
+      svgWidth.value = Math.max(200, w);
+      // keep a reasonable aspect ratio for chart area
+      svgHeight.value = Math.max(160, Math.round(svgWidth.value * 0.45));
+    };
+    measure();
+    ro = new ResizeObserver(measure);
+    ro.observe(container.value as Element);
+  }
+});
+onUnmounted(() => {
+  if (ro && container.value) ro.disconnect();
+  ro = null;
 });
 </script>
 
@@ -403,6 +437,9 @@ onMounted(() => {
   box-shadow: 0 6px 24px rgba(60, 64, 71, 0.06);
   font-family: Inter, 'Helvetica Neue', Arial, sans-serif;
   color: #243248;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* header */
@@ -449,6 +486,17 @@ onMounted(() => {
   background: transparent;
   border-radius: 8px;
   padding: 6px 0;
+}
+
+/* make legend wrap when space is constrained and hide on very small screens */
+.legend {
+  flex-wrap: wrap;
+}
+.coin-btn {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 /* info row */
@@ -531,6 +579,29 @@ onMounted(() => {
 @media (max-width: 900px) {
   .market-card {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  /* hide legend to save space */
+  .legend {
+    display: none;
+  }
+
+  /* collapse info row: hide center stats and stack left/right */
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .info-row .center {
+    display: none;
+  }
+  .info-row .right {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    gap: 8px;
   }
 }
 </style>
