@@ -63,7 +63,8 @@ jobs:
             node_modules/.vite
 
       - name: Install dependencies
-        run: npm ci --prefer-offline --no-audit --no-fund --silent
+        # run: npm ci --prefer-offline --no-audit --no-fund --silent
+        run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Build project
         run: npm run build --if-present --silent
