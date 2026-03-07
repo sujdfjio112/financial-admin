@@ -9,7 +9,7 @@ on:
         default: dev
 
 env:
-  REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  REGISTRY: crpi-4gjhfmn9d3r2c9et.cn-hangzhou.personal.cr.aliyuncs.com
   NAMESPACE: gavin
   IMAGE_NAME: ng-app
 
