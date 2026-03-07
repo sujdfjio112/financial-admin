@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "镜像版本"
-        required: false
         default: dev
 
 env:
@@ -14,14 +12,13 @@ env:
   IMAGE_NAME: finacial-admin
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set Image Tag
+      - name: Set tag
         run: echo "IMAGE_TAG=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
       - name: Login ACR
@@ -30,15 +27,31 @@ jobs:
           --username ${{ secrets.ACR_USERNAME }} \
           --password-stdin
 
-      - name: Build Image
+      - name: Build image
         run: |
           docker build -t $REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG .
 
-      - name: Push Image
+      - name: Push image
         run: |
           docker push $REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG
 
-      - name: Print Image URL
+      - name: Checkout k3s-configs
+        uses: actions/checkout@v4
+        with:
+          repository: sujdfjio112/k3s-configs
+          token: ${{ secrets.GH_TOKEN }}
+          path: k3s-configs
+
+      - name: Update image
         run: |
-          echo "Image pushed:"
-          echo "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG"
+          IMAGE="$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG"
+          sed -i "s|image: .*|image: $IMAGE|" k3s-configs/apps/financial-admin/deployment.yaml
+
+      - name: Commit and push
+        run: |
+          cd k3s-configs
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "deploy financial-admin:$IMAGE_TAG"
+          git push
