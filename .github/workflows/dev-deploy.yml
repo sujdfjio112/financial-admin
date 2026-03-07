@@ -1,0 +1,36 @@
+name: Deploy Dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "镜像版本"
+        required: false
+        default: dev
+
+env:
+  REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  NAMESPACE: gavin
+  IMAGE_NAME: ng-app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: login acr
+        run: |
+          docker login $REGISTRY \
+          -u ${{ secrets.ACR_USERNAME }} \
+          -p ${{ secrets.ACR_PASSWORD }}
+
+      - name: build image
+        run: |
+          docker build -t $REGISTRY/$NAMESPACE/$IMAGE_NAME:${{ github.event.inputs.version }} .
+
+      - name: push image
+        run: |
+          docker push $REGISTRY/$NAMESPACE/$IMAGE_NAME:${{ github.event.inputs.version }}
