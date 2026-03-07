@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY: crpi-4gjhfmn9d3r2c9et.cn-hangzhou.personal.cr.aliyuncs.com
   NAMESPACE: financial-admin
-  IMAGE_NAME: finacial-admin
+  IMAGE_NAME: financial-admin
 
 jobs:
   deploy:
