@@ -10,27 +10,35 @@ on:
 
 env:
   REGISTRY: crpi-4gjhfmn9d3r2c9et.cn-hangzhou.personal.cr.aliyuncs.com
-  NAMESPACE: gavin
-  IMAGE_NAME: ng-app
+  NAMESPACE: financial-admin
+  IMAGE_NAME: finacial-admin
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: login acr
-        run: |
-          docker login $REGISTRY \
-          -u ${{ secrets.ACR_USERNAME }} \
-          -p ${{ secrets.ACR_PASSWORD }}
+      - name: Set Image Tag
+        run: echo "IMAGE_TAG=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
-      - name: build image
+      - name: Login ACR
         run: |
-          docker build -t $REGISTRY/$NAMESPACE/$IMAGE_NAME:${{ github.event.inputs.version }} .
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login $REGISTRY \
+          --username ${{ secrets.ACR_USERNAME }} \
+          --password-stdin
 
-      - name: push image
+      - name: Build Image
         run: |
-          docker push $REGISTRY/$NAMESPACE/$IMAGE_NAME:${{ github.event.inputs.version }}
+          docker build -t $REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Push Image
+        run: |
+          docker push $REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG
+
+      - name: Print Image URL
+        run: |
+          echo "Image pushed:"
+          echo "$REGISTRY/$NAMESPACE/$IMAGE_NAME:$IMAGE_TAG"
